@@ -882,6 +882,22 @@ class TestMetafunc:
         ).make_unique_parameterset_ids()
         assert result == ["a0", "a1", "b0", "c", "b1"]
 
+    @pytest.mark.parametrize(
+        ("ids", "expected"),
+        [
+            (["a", "a", "a0"], ["a1", "a2", "a0"]),
+            (["a0", "a0", "a", "a"], ["a0_0", "a0_1", "a0", "a1"]),
+            (["0", "0", "", ""], ["0_0", "0_1", "0", "1"]),
+        ],
+    )
+    def test_idmaker_suffix_collisions(
+        self, ids: list[str], expected: list[str]
+    ) -> None:
+        result = IdMaker(
+            ("a",), [pytest.param(i) for i in range(len(ids))], None, ids, None, None
+        ).make_unique_parameterset_ids()
+        assert result == expected
+
     def test_parametrize_indirect(self) -> None:
         """#714"""
 

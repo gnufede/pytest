@@ -964,6 +964,8 @@ class IdMaker:
 
             # Map the ID to its next suffix.
             id_suffixes: dict[str, int] = defaultdict(int)
+            # Replacements can make original IDs available for later suffixes.
+            used_id_counts = id_counts.copy()
             # Suffix non-unique IDs to make them unique.
             for index, id in enumerate(resolved_ids):
                 if id_counts[id] > 1:
@@ -973,11 +975,15 @@ class IdMaker:
                     if id and id[-1].isdigit():
                         suffix = "_"
                     new_id = f"{id}{suffix}{id_suffixes[id]}"
-                    while new_id in set(resolved_ids):
+                    while used_id_counts[new_id]:
                         id_suffixes[id] += 1
                         new_id = f"{id}{suffix}{id_suffixes[id]}"
                     resolved_ids[index] = new_id
+                    used_id_counts[id] -= 1
+                    used_id_counts[new_id] += 1
                     id_suffixes[id] += 1
+            # Avoid retaining the lookup while the final assertion builds a set.
+            del used_id_counts
         assert len(resolved_ids) == len(set(resolved_ids)), (
             f"Internal error: {resolved_ids=}"
         )
